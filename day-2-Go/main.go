@@ -1,4 +1,5 @@
 // First time using Go
+// Version: 1.23.4
 package main
 
 import (
