@@ -47,17 +47,30 @@ module Day3 where
 
     -- ENTRY POINT
     resolveInput :: String -> Int
-    resolveInput input = recurse (" " ++ input) 0
+    resolveInput input = recurse (" " ++ input) 0 True
         where
-            recurse (_:input) previousTotal =
-                recurse input previousTotal + resolveIfMulStatement input
-            recurse "" total = total
+            recurse ('d':'o':'n':'\'':'t':'(':')':input) total _ =
+                recurse (')':input) total False
+            recurse ('d':'o':'(':')':input) total _ =
+                recurse (')':input) total True
+
+            recurse (_:input) total True =
+                recurse input (total + resolveIfMulStatement input) True
+            recurse (_:input) total False = recurse input total False
+
+            recurse "" total _ = total
 
     exampleInput :: String
     exampleInput = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
+
+    exampleInputPart2 :: String
+    exampleInputPart2 = "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
 
     processInputFile :: IO ()
     processInputFile = do
         input <- readFile "input"
         putStrLn "Total:"
         print (resolveInput input)
+        where
+            processLines [] = 0
+            processLines (line:rest) = resolveInput line + processLines rest
