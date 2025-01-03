@@ -1,5 +1,9 @@
 day-1-C++/day-1
+
 **/.metals/*
 **/.vscode/*
 day-4-Scala/**/.bsp/*
 day-4-Scala/**/.scala-build/*
+
+day-5-Odin/main
+**/ols.json
