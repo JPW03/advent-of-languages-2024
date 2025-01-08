@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:strings"
 import "core:strconv"
 import "core:math"
+import "core:slice"
 
 exampleInput :: `47|53
 97|13
@@ -46,10 +47,11 @@ Update :: [dynamic]int
 
 main :: proc() {
     fmt.println("Hello World!")
-    
+
     rules, updates := parseInput(input)
 
     total := 0
+    invalid_updates: [dynamic]Update
 
     for update in updates {
         fmt.println(update)
@@ -59,8 +61,25 @@ main :: proc() {
         if valid {
             total += get_middle_number(update)
         }
+        else {
+            append(&invalid_updates, update)
+        }
     }
-    fmt.print("Total = ")
+    fmt.print("Part 1 Answer: ")
+    fmt.println(total)
+
+    // Part 2
+
+    total = 0
+    for update in invalid_updates {
+        fmt.println()
+        fmt.println(update)
+        fix_invalid_update(update, rules)
+        total += get_middle_number(update)
+        fmt.println(update)
+    }
+    
+    fmt.print("Part 2 Answer: ")
     fmt.println(total)
 }
 
@@ -120,17 +139,13 @@ is_update_valid :: proc(update: Update, rules: [dynamic]Rule) -> bool {
     fmt.println(relevant_rules)
 
     for page in update {
-        // fmt.println(page)
         rules_to_remove : [dynamic]int
         for rule, i in relevant_rules {
-            // fmt.println(rule)
             if rule.after == page {
-                // fmt.println("Broken")
                 return false
             }
 
             if rule.before == page {
-                // fmt.println("Removing")
                 append(&rules_to_remove, i)
             }
         }
@@ -138,7 +153,6 @@ is_update_valid :: proc(update: Update, rules: [dynamic]Rule) -> bool {
         for i, count in rules_to_remove {
             ordered_remove(&relevant_rules, i - count)
         }
-        // fmt.println(relevant_rules)
 
         (len(relevant_rules) > 0) or_break
     }
@@ -166,4 +180,34 @@ find_relevant_rules :: proc(update: Update, rules: [dynamic]Rule) -> (relevant_r
 
 get_middle_number :: proc(update: Update) -> int {
     return update[cast(u32)math.floor_f16(cast(f16)(len(update) / 2))]
+}
+
+fix_invalid_update :: proc(update: Update, rules: [dynamic]Rule) {
+
+    relevant_rules := find_relevant_rules(update, rules)
+
+    fix_first_broken_rule :: proc(update: Update, relevant_rules: [dynamic]Rule) -> bool {
+        for rule, i in relevant_rules {
+            before_location, before_found := slice.linear_search(update[:], rule.before)
+            after_location, after_found := slice.linear_search(update[:], rule.after)
+
+            if !before_found || !after_found {
+                panic("Could not find relevant rule contents in the update")
+            }
+
+            if before_location > after_location {
+                update[before_location] = rule.after
+                update[after_location] = rule.before
+                fmt.println(rule)
+                fmt.println("Broken rule. Swapped")
+                return true
+            }
+        }
+        return false
+    }
+
+    broken := true
+    for broken {
+        broken = fix_first_broken_rule(update, relevant_rules)
+    }
 }
